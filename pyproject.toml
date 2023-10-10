@@ -1,0 +1,12 @@
+[project]
+name = "pydirectus"
+version = "0.0.3"
+description = "REST API Wrapper for Directus"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests",
+]
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
