@@ -9,6 +9,9 @@ from .auth import DirectusAuth
 from .exceptions import DirectusException
 
 
+# TODO Dataclass needed? Maybe change to #1
+# Maybe let this be a Typed Dict and change it
+# to Item/File Typed Dict in Directus API wrapper
 @dataclass
 class Result:
     success: bool
@@ -35,12 +38,12 @@ class RestAdapter:
 
         self._logger = logger or logging.getLogger(__name__)
         self._auth = DirectusAuth(
-            hostname=self.url, 
-            static_token=self._api_key, 
-            username=self._username, 
-            password=self._password
+            hostname=self.url,
+            static_token=self._api_key,
+            username=self._username,
+            password=self._password,
         )
-        
+
         if not ssl_verify:
             requests.packages.urllib3.disable_warnings()
 
@@ -89,8 +92,10 @@ class RestAdapter:
             # Deserialize JSON output to Python object, or return failed Result on exception
             try:
                 data_out = response.json()
-            except (ValueError, JSONDecodeError) as e:  
-                log_line = f"success=False, status_code={response.status_code}, message={e}"
+            except (ValueError, JSONDecodeError) as e:
+                log_line = (
+                    f"success=False, status_code={response.status_code}, message={e}"
+                )
                 self._logger.warning(msg=log_line)
 
                 return Result(False, response.status_code, message=str(e))
@@ -128,9 +133,7 @@ class RestAdapter:
         :param data: A dict of data sent in the body
         :return: Result object
         """
-        return self._do(
-            http_method="POST", endpoint=endpoint, params=params, data=data
-        )
+        return self._do(http_method="POST", endpoint=endpoint, params=params, data=data)
 
     def patch(
         self,

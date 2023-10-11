@@ -2,8 +2,18 @@ import json
 import logging
 from typing import Optional
 
-from .rest_adapter import RestAdapter
+from .models import Item, File
+
+from .rest_adapter import RestAdapter, Result
 from .utils import list_to_string
+
+
+# handle_directus_result() ?
+def handle_result(result: Result):
+    if not result.success:
+        return result.data["errors"]
+
+    return result.data["data"]
 
 
 class Directus:
@@ -34,7 +44,7 @@ class Directus:
         sort: list[str] = None,
         limit: int = -1,
         offset: int = None,
-    ) -> list[dict]:
+    ) -> list[Item]:
         """
         GET Items from Collection
         :param collection: a string representing the collection name
@@ -56,14 +66,11 @@ class Directus:
             "offset": offset,
         }
 
-        result = self._rest_adapter.get(
-            endpoint=f"/items/{collection}", params=params
-        )
+        # TODO so oder wie zuvor?
+        endpoint = f"/items/{collection}"
+        result = self._rest_adapter.get(endpoint, params=params)
 
-        if not result.success:
-            return result.data["errors"]
-
-        return result.data["data"]
+        return handle_result(result)
 
     def get_item_by_ID(
         self, collection: str, item_id: str, fields: list[str] = None
@@ -144,7 +151,7 @@ class Directus:
         sort: list[str] = None,
         limit: int = -1,
         offset: int = None,
-    ) -> list[dict]:
+    ) -> list[File]:
         """
         GET Files
         :param fields: a list of fields that are returned in the current dataset
@@ -172,7 +179,7 @@ class Directus:
 
         return result.data["data"]
 
-    def get_file_by_ID(self, file_id: str, fields: list[str] = None) -> dict:
+    def get_file_by_ID(self, file_id: str, fields: list[str] = None) -> File:
         """
         GET File by ID
         :param file_id: a string representing the file ID
