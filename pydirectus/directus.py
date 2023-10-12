@@ -2,35 +2,40 @@ import json
 import logging
 from typing import Optional
 
+from .auth import DirectusAuth
+
 from .models import Item, File
 
 from .rest_adapter import RestAdapter, Result
 from .utils import list_to_string
 
 
-# handle_directus_result() ?
-def handle_result(result: Result):
+def handle_directus_response(result: Result):
     if not result.success:
+        # raise Exception ??
         return result.data["errors"]
 
     return result.data["data"]
 
 
-class Directus:
+class DirectusClient:
     def __init__(
         self,
         hostname: str,
-        api_key: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
+        static_token: Optional[str] = None,
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self._rest_adapter = RestAdapter(
             hostname=hostname,
-            api_key=api_key,
-            username=username,
-            password=password,
+            auth_handler=DirectusAuth(
+                hostname=hostname,
+                static_token=static_token,
+                username=username,
+                password=password,
+            ),
             ssl_verify=ssl_verify,
             logger=logger,
         )
@@ -59,22 +64,21 @@ class Directus:
         """
         params = {
             "fields": list_to_string(fields),
-            "filter": json.dumps(filter),
+            "filter": json.dumps(filter) if filter else {},
             "search": search,
             "sort": list_to_string(sort),
             "limit": limit,
             "offset": offset,
         }
 
-        # TODO so oder wie zuvor?
         endpoint = f"/items/{collection}"
-        result = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=params)
 
-        return handle_result(result)
+        return handle_directus_response(response)
 
     def get_item_by_ID(
         self, collection: str, item_id: str, fields: list[str] = None
-    ) -> dict:
+    ) -> Item:
         """
         GET Item from Collection by ID
         :param collection: a string representing the collection name
@@ -85,16 +89,12 @@ class Directus:
         """
         params = {"fields": fields}
 
-        result = self._rest_adapter.get(
-            endpoint=f"/items/{collection}/{item_id}", params=params
-        )
+        endpoint = f"/items/{collection}/{item_id}"
+        response = self._rest_adapter.get(endpoint, params=params)
 
-        if not result.success:
-            return result.data["errors"]
+        return handle_directus_response(response)
 
-        return result.data["data"]
-
-    def create_item(self, collection: str, data: dict) -> dict:
+    def create_item(self, collection: str, data: dict) -> Item:
         """
         POST Item to Collection
         :param collection: a string representing the collection name
@@ -102,14 +102,13 @@ class Directus:
 
         :return: created item as dict, if successful
         """
-        result = self._rest_adapter.post(endpoint=f"/items/{collection}", data=data)
 
-        if not result.success:
-            return result.data["errors"]
+        endpoint = f"/items/{collection}"
+        response = self._rest_adapter.post(endpoint, data=data)
 
-        return result.data["data"]
+        return handle_directus_response(response)
 
-    def update_item(self, collection: str, item_id: str, data: dict) -> dict:
+    def update_item(self, collection: str, item_id: str, data: dict) -> Item:
         """
         PATCH Item in Collection
         :param collection: a string representing the collection name
@@ -118,16 +117,12 @@ class Directus:
 
         :return: updated item as dict, if successful
         """
-        result = self._rest_adapter.patch(
-            endpoint=f"/items/{collection}/{item_id}", data=data
-        )
+        endpoint = f"/items/{collection}/{item_id}"
+        response = self._rest_adapter.patch(endpoint, data=data)
 
-        if not result.success:
-            return result.data["errors"]
+        return handle_directus_response(response)
 
-        return result.data["data"]
-
-    def delete_item(self, collection: str, item_id: str):
+    def delete_item(self, collection: str, item_id: str) -> None:
         """
         DELETE Item in Collection
         :param collection: a string representing the collection name
@@ -135,13 +130,8 @@ class Directus:
 
         :return: a dict stating success
         """
-        result = self._rest_adapter.delete(endpoint=f"/items/{collection}/{item_id}")
-
-        if not result.success:
-            return result.data["errors"]
-
-        # TODO unsure of this solution, may get changed
-        return {"success": result.success}
+        endpoint = f"/items/{collection}/{item_id}"
+        response = self._rest_adapter.delete(endpoint)
 
     def get_files(
         self,
@@ -172,12 +162,10 @@ class Directus:
             "offset": offset,
         }
 
-        result = self._rest_adapter.get(endpoint=f"/files", params=params)
+        endpoint = "/files"
+        response = self._rest_adapter.get(endpoint, params=params)
 
-        if not result.success:
-            return result.data["errors"]
-
-        return result.data["data"]
+        return handle_directus_response(response)
 
     def get_file_by_ID(self, file_id: str, fields: list[str] = None) -> File:
         """
@@ -189,28 +177,24 @@ class Directus:
         """
         params = {"fields": fields}
 
-        result = self._rest_adapter.get(endpoint=f"/files/{file_id}", params=params)
+        endpoint = f"/files/{file_id}"
+        response = self._rest_adapter.get(endpoint, params=params)
 
-        if not result.success:
-            return result.data["errors"]
+        return handle_directus_response(response)
 
-        return result.data["data"]
-
-    def create_file(self, data: dict) -> dict:
+    def create_file(self, data: dict) -> File:
         """
         POST File
         :param data: file data as dict
 
         :return: created file as dict, if successful
         """
-        result = self._rest_adapter.post(endpoint=f"/files", data=data)
+        endpoint = "/files"
+        response = self._rest_adapter.post(endpoint, data=data)
 
-        if not result.success:
-            return result.data["errors"]
+        return handle_directus_response(response)
 
-        return result.data["data"]
-
-    def update_file(self, file_id: str, data: dict) -> dict:
+    def update_file(self, file_id: str, data: dict) -> File:
         """
         PATCH File
         :param file_id: a string representing the file ID
@@ -218,23 +202,17 @@ class Directus:
 
         :return: updated file as dict, if successful
         """
-        result = self._rest_adapter.patch(endpoint=f"/files/{file_id}", data=data)
+        endpoint = f"/files/{file_id}"
+        response = self._rest_adapter.patch(endpoint, data=data)
 
-        if not result.success:
-            return result.data["errors"]
+        return handle_directus_response(response)
 
-        return result.data["data"]
-
-    def delete_file(self, file_id: str) -> dict:
+    def delete_file(self, file_id: str) -> None:
         """
         DELETE File
         :param file_id: a string representing the file ID
 
         :return: a dict stating success
         """
-        result = self._rest_adapter.delete(endpoint=f"/files/{file_id}")
-
-        if not result.success:
-            return result.data["errors"]
-        # TODO unsure of this solution, may get changed
-        return {"success": result.success}
+        endpoint = f"/files/{file_id}"
+        response = self._rest_adapter.delete(endpoint)

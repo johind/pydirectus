@@ -1,13 +1,9 @@
+# This will automatically make all annotations be represented as strings
+from __future__ import annotations
 from typing import TypedDict
 
 
-class Folder(TypedDict):
-    # Primary key of the folder.
-    id: str
-    # Name of the folder.
-    name: str
-    # Parent folder. Many-to-one to folders (recursive).
-    parent: str | dict | None  # TODO gibt es none oder ist es dann string??
+# Disclaimer: The following explanations are from the official Directus Documentation
 
 
 class Item(TypedDict):
@@ -75,3 +71,12 @@ class Activity(TypedDict):
     user_agent: str
     # Any changes that were made in this activity. One-to-many to revisions.
     revisions: list  # TODO liste von strings oder objekten?
+
+
+class Folder(TypedDict):
+    # Primary key of the folder.
+    id: str
+    # Name of the folder.
+    name: str
+    # Parent folder. Many-to-one to folders (recursive).
+    parent: str | Folder | None  # TODO gibt es none oder ist es dann string??
