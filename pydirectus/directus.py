@@ -2,6 +2,8 @@ import json
 import logging
 from typing import Optional
 
+from .exceptions import DirectusException
+
 from .auth import DirectusAuth
 
 from .models import Item, File
@@ -12,8 +14,7 @@ from .utils import list_to_string
 
 def handle_directus_response(result: Result):
     if not result.success:
-        # raise Exception ??
-        return result.data["errors"]
+        raise DirectusException(result.data["errors"])
 
     return result.data["data"]
 
