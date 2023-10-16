@@ -3,11 +3,8 @@ import logging
 from typing import Optional
 
 from .exceptions import DirectusException
-
 from .auth import DirectusAuth
-
 from .models import Item, File
-
 from .rest_adapter import RestAdapter, Result
 from .utils import list_to_string
 
@@ -41,7 +38,7 @@ class DirectusClient:
             logger=logger,
         )
 
-    def get_items(
+    def read_items(
         self,
         collection: str,
         fields: list[str] = None,
@@ -77,7 +74,7 @@ class DirectusClient:
 
         return handle_directus_response(response)
 
-    def get_item_by_ID(
+    def read_item(
         self, collection: str, item_id: str, fields: list[str] = None
     ) -> Item:
         """
@@ -129,12 +126,12 @@ class DirectusClient:
         :param collection: a string representing the collection name
         :param item_id: a string representing the item ID
 
-        :return: a dict stating success
+        :return: None
         """
         endpoint = f"/items/{collection}/{item_id}"
         response = self._rest_adapter.delete(endpoint)
 
-    def get_files(
+    def read_files(
         self,
         fields: list[str] = None,
         filter: dict = None,
@@ -168,7 +165,7 @@ class DirectusClient:
 
         return handle_directus_response(response)
 
-    def get_file_by_ID(self, file_id: str, fields: list[str] = None) -> File:
+    def read_file(self, file_id: str, fields: list[str] = None) -> File:
         """
         GET File by ID
         :param file_id: a string representing the file ID
@@ -213,7 +210,7 @@ class DirectusClient:
         DELETE File
         :param file_id: a string representing the file ID
 
-        :return: a dict stating success
+        :return: None
         """
         endpoint = f"/files/{file_id}"
         response = self._rest_adapter.delete(endpoint)
