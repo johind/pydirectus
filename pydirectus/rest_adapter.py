@@ -1,46 +1,47 @@
 import logging
-from dataclasses import dataclass
 from json import JSONDecodeError
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import requests
 
-from .auth import DirectusAuth
 from .exceptions import DirectusException
 
 
-@dataclass
 class Result:
-    success: bool
-    status_code: int
-    message: str
-    data: Optional[Union[list[dict], dict]] = None
+    def __init__(
+        self,
+        success: bool,
+        status_code: int,
+        message: str = "",
+        data: list[dict] | dict = None,
+    ):
+        """
+        Result returned from low-level RestAdapter
+        :param success: True if HTTP Request was successful, False if not
+        :param status_code: Standard HTTP Status code
+        :param message: Human readable result
+        :param data: Python List of Dictionaries (or maybe just a single Dictionary on error)
+        """
+        self.success = bool(success)
+        self.status_code = int(status_code)
+        self.message = str(message)
+        self.data = data
 
 
 class RestAdapter:
     def __init__(
         self,
         hostname: str,
-        api_key: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        auth_handler: Any = None,
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.url = hostname
-        self._api_key = api_key
-        self._username = username
-        self._password = password
-        self._ssl_verify = ssl_verify
+        self._url = hostname
+        self._auth = auth_handler
 
+        self._ssl_verify = ssl_verify
         self._logger = logger or logging.getLogger(__name__)
-        self._auth = DirectusAuth(
-            hostname=self.url, 
-            static_token=self._api_key, 
-            username=self._username, 
-            password=self._password
-        )
-        
+
         if not ssl_verify:
             requests.packages.urllib3.disable_warnings()
 
@@ -59,7 +60,7 @@ class RestAdapter:
         :param data: A dict of data sent in the body
         :return: Result object
         """
-        request_url = f"http://{self.url}{endpoint}"
+        request_url = f"{self._url}{endpoint}"
         headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br",
@@ -80,7 +81,7 @@ class RestAdapter:
             )
         except requests.exceptions.RequestException as e:
             self._logger.error(msg=(str(e)))
-            raise DirectusException(str(e))
+            raise DirectusException(str(e)) from e
 
         # on delete return data is empty. handle this case here
         if response.status_code == 204:
@@ -89,8 +90,10 @@ class RestAdapter:
             # Deserialize JSON output to Python object, or return failed Result on exception
             try:
                 data_out = response.json()
-            except (ValueError, JSONDecodeError) as e:  
-                log_line = f"success=False, status_code={response.status_code}, message={e}"
+            except (ValueError, JSONDecodeError) as e:
+                log_line = (
+                    f"success=False, status_code={response.status_code}, message={e}"
+                )
                 self._logger.warning(msg=log_line)
 
                 return Result(False, response.status_code, message=str(e))
@@ -128,9 +131,7 @@ class RestAdapter:
         :param data: A dict of data sent in the body
         :return: Result object
         """
-        return self._do(
-            http_method="POST", endpoint=endpoint, params=params, data=data
-        )
+        return self._do(http_method="POST", endpoint=endpoint, params=params, data=data)
 
     def patch(
         self,

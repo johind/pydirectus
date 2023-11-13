@@ -19,7 +19,7 @@ class DirectusAuth(requests.auth.AuthBase):
         self.username = username
         self.password = password
 
-        if not (self.username and self.password) and not self.static_token:
+        if not ((self.username and self.password) or self.static_token):
             raise DirectusAuthException(
                 "No static_token or username and password have been provided!"
             )
@@ -29,46 +29,49 @@ class DirectusAuth(requests.auth.AuthBase):
         # token that can be used to retrieve a new access token.
         self.refresh_token = None
         # how long before the access token will expire (in ms).
-        self.token_expires = None
+        self.token_expires = 0
         # timestamp of last token request (in ms).
-        self.token_timestamp = None
+        self.token_timestamp = 0
 
     def _get_access_token(self, auth_type: str) -> None:
-        request_url = f"http://{self.hostname}/auth/{auth_type}"
+        auth_request_url = f"{self.hostname}/auth/{auth_type}"
 
         match auth_type:
             case "login":
                 data = {"email": self.username, "password": self.password}
             case "refresh":
                 data = {"refresh_token": self.refresh_token}
-            case _:
-                raise ValueError("Parameter auth_type must be set to either 'login' or 'refresh'!")
 
-        response = requests.request(method="POST", url=request_url, json=data)
+        response = requests.post(auth_request_url, json=data)
+        response_data = response.json()
 
-        out_data = response.json()
+        if "errors" in response_data:
+            raise DirectusAuthException(response_data["errors"])
 
-        if "errors" in out_data:
-            raise DirectusAuthException(out_data["errors"])
+        self.access_token = response_data["data"]["access_token"]
+        self.refresh_token = response_data["data"]["refresh_token"]
+        self.token_expires = response_data["data"]["expires"]
 
-        self.access_token = out_data["data"]["access_token"]
-        self.refresh_token = out_data["data"]["refresh_token"]
-        self.token_expires = out_data["data"]["expires"]
+    def _ensure_access_token(self) -> str:
+        if self.static_token:
+            return self.static_token
+
+        current_time = current_time_in_ms()
+
+        if (
+            # if there is no access token yet
+            not self.access_token
+            # if the current access token has already expired
+            or current_time >= self.token_timestamp + self.token_expires
+        ):
+            auth_type = "login" if not self.access_token else "refresh"
+            self._get_access_token(auth_type)
+            self.token_timestamp = current_time
+
+        return self.access_token
 
     def __call__(self, r: requests.Request):
-        if self.static_token:
-            bearer_token = self.static_token
-        elif self.access_token:
-            current_time = current_time_in_ms()
-            if current_time >= self.token_timestamp + self.token_expires:
-                self._get_access_token(auth_type="refresh")
-                self.token_timestamp = current_time_in_ms()
-            bearer_token = self.access_token
-        else:
-            self._get_access_token(auth_type="login")
-            self.token_timestamp = current_time_in_ms()
-            bearer_token = self.access_token
-
+        bearer_token = self._ensure_access_token()
         r.headers["Authorization"] = f"Bearer {bearer_token}"
 
         return r
