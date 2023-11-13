@@ -60,7 +60,7 @@ class RestAdapter:
         :param data: A dict of data sent in the body
         :return: Result object
         """
-        request_url = f"http://{self._url}{endpoint}"
+        request_url = f"{self._url}{endpoint}"
         headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br",
