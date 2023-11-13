@@ -2,9 +2,9 @@ import json
 import logging
 from typing import Optional
 
-from .exceptions import DirectusException
 from .auth import DirectusAuth
-from .models import Item, File
+from .exceptions import DirectusException
+from .models import File, Item
 from .rest_adapter import RestAdapter, Result
 from .utils import list_to_string
 
@@ -26,14 +26,15 @@ class DirectusClient:
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
+        self.auth_handler = DirectusAuth(
+            hostname=hostname,
+            static_token=static_token,
+            username=username,
+            password=password,
+        )
         self._rest_adapter = RestAdapter(
             hostname=hostname,
-            auth_handler=DirectusAuth(
-                hostname=hostname,
-                static_token=static_token,
-                username=username,
-                password=password,
-            ),
+            auth_handler=self.auth_handler,
             ssl_verify=ssl_verify,
             logger=logger,
         )
