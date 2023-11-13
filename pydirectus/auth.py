@@ -19,7 +19,7 @@ class DirectusAuth(requests.auth.AuthBase):
         self.username = username
         self.password = password
 
-        if not (self.username and self.password) and not self.static_token:
+        if not ((self.username and self.password) or self.static_token):
             raise DirectusAuthException(
                 "No static_token or username and password have been provided!"
             )
@@ -34,7 +34,7 @@ class DirectusAuth(requests.auth.AuthBase):
         self.token_timestamp = 0
 
     def _get_access_token(self, auth_type: str) -> None:
-        request_url = f"http://{self.hostname}/auth/{auth_type}"
+        auth_request_url = f"{self.hostname}/auth/{auth_type}"
 
         match auth_type:
             case "login":
@@ -42,7 +42,7 @@ class DirectusAuth(requests.auth.AuthBase):
             case "refresh":
                 data = {"refresh_token": self.refresh_token}
 
-        response = requests.post(request_url, json=data)
+        response = requests.post(auth_request_url, json=data)
         response_data = response.json()
 
         if "errors" in response_data:
@@ -59,7 +59,9 @@ class DirectusAuth(requests.auth.AuthBase):
         current_time = current_time_in_ms()
 
         if (
+            # if there is no access token yet
             not self.access_token
+            # if the current access token has already expired
             or current_time >= self.token_timestamp + self.token_expires
         ):
             auth_type = "login" if not self.access_token else "refresh"
