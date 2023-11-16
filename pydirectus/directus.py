@@ -3,17 +3,9 @@ import logging
 from typing import Optional
 
 from .auth import DirectusAuth
-from .exceptions import DirectusException
 from .models import File, Item
-from .rest_adapter import RestAdapter, Result
-from .utils import list_to_string
-
-
-def handle_directus_response(result: Result):
-    if not result.success:
-        raise DirectusException(result.data["errors"])
-
-    return result.data["data"]
+from .rest_adapter import RestAdapter
+from .utils import handle_directus_response, list_to_string
 
 
 class DirectusClient:
