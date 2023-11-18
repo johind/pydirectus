@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 from .auth import DirectusAuth
-from .models import File, Item
+from .models import File, Item, Query
 from .rest_adapter import RestAdapter
 from .utils import handle_directus_response, list_to_string
 
@@ -34,12 +34,7 @@ class DirectusClient:
     def read_items(
         self,
         collection: str,
-        fields: list[str] = None,
-        filter: dict = None,
-        search: str = None,
-        sort: list[str] = None,
-        limit: int = -1,
-        offset: int = None,
+        query: Query = None,
     ) -> list[Item]:
         """
         GET Items from Collection
@@ -53,23 +48,12 @@ class DirectusClient:
 
         :return: list of dict
         """
-        params = {
-            "fields": list_to_string(fields),
-            "filter": json.dumps(filter) if filter else {},
-            "search": search,
-            "sort": list_to_string(sort),
-            "limit": limit,
-            "offset": offset,
-        }
-
         endpoint = f"/items/{collection}"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
-    def read_item(
-        self, collection: str, item_id: str, fields: list[str] = None
-    ) -> Item:
+    def read_item(self, collection: str, item_id: str, query: Query = None) -> Item:
         """
         GET Item from Collection by ID
         :param collection: a string representing the collection name
@@ -78,10 +62,9 @@ class DirectusClient:
 
         :return: item as dict
         """
-        params = {"fields": fields}
 
         endpoint = f"/items/{collection}/{item_id}"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
@@ -126,12 +109,7 @@ class DirectusClient:
 
     def read_files(
         self,
-        fields: list[str] = None,
-        filter: dict = None,
-        search: str = None,
-        sort: list[str] = None,
-        limit: int = -1,
-        offset: int = None,
+        query: Query = None,
     ) -> list[File]:
         """
         GET Files
@@ -144,21 +122,12 @@ class DirectusClient:
 
         :return: list of dict
         """
-        params = {
-            "fields": list_to_string(fields),
-            "filter": json.dumps(filter),
-            "search": search,
-            "sort": list_to_string(sort),
-            "limit": limit,
-            "offset": offset,
-        }
-
         endpoint = "/files"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
-    def read_file(self, file_id: str, fields: list[str] = None) -> File:
+    def read_file(self, file_id: str, query: Query = None) -> File:
         """
         GET File by ID
         :param file_id: a string representing the file ID
@@ -166,10 +135,8 @@ class DirectusClient:
 
         :return: file as dict
         """
-        params = {"fields": fields}
-
         endpoint = f"/files/{file_id}"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
