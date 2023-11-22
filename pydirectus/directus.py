@@ -39,14 +39,18 @@ class DirectusClient:
         """
         GET Items from Collection
         :param collection: a string representing the collection name
-        :param fields: a list of fields that are returned in the current dataset
-        :param filter: search items in a collection that match the filter
-        :param search: perform a search on all string and text type fields within a collection
-        :param sort: what field(s) to sort by. sorting defaults to ascending
-        :param limit: set the maximum number of items that will be returned
-        :param offset: skip the first n items in the response
+        :param query: a dictionary specifying the query parameters for filtering, searching, sorting, etc.
+          - fields: A list of fields that are returned.
+          - filter: Search items in a collection that match the filter.
+          - search: Perform a search on all string and text type fields within a collection.
+          - sort: What field(s) to sort by. Sorting defaults to ascending.
+          - limit: Set the maximum number of items that will be returned.
+          - offset: Skip the first n items in the response.
+          - page: Specify the page number when paginating results.
+          - deep: Set any of the other query parameters on a nested relational dataset.
+          - alias: Rename fields and request the same nested data set multiple times using different filters
 
-        :return: list of dict
+        :return: List[Item] - A list of items retrieved from the collection.
         """
         endpoint = f"/items/{collection}"
         response = self._rest_adapter.get(endpoint, params=query)
@@ -58,7 +62,8 @@ class DirectusClient:
         GET Item from Collection by ID
         :param collection: a string representing the collection name
         :param item_id: a string representing the item ID
-        :param fields: list of fields that are returned in the current dataset
+        :param query:
+          - fields: A list of fields that are returned.
 
         :return: item as dict
         """
@@ -113,12 +118,16 @@ class DirectusClient:
     ) -> list[File]:
         """
         GET Files
-        :param fields: a list of fields that are returned in the current dataset
-        :param filter: search files in a collection that match the filter
-        :param search: perform a search on all string and text type fields within files
-        :param sort: what field(s) to sort by. sorting defaults to ascending
-        :param limit: set the maximum number of files that will be returned
-        :param offset: skip the first n files in the response
+        :param query: a dictionary specifying the query parameters for filtering, searching, sorting, etc.
+          - fields: A list of fields that are returned.
+          - filter: Search items in a collection that match the filter.
+          - search: Perform a search on all string and text type fields within a collection.
+          - sort: What field(s) to sort by. Sorting defaults to ascending.
+          - limit: Set the maximum number of items that will be returned.
+          - offset: Skip the first n items in the response.
+          - page: Specify the page number when paginating results.
+          - deep: Set any of the other query parameters on a nested relational dataset.
+          - alias: Rename fields and request the same nested data set multiple times using different filters
 
         :return: list of dict
         """
@@ -131,7 +140,8 @@ class DirectusClient:
         """
         GET File by ID
         :param file_id: a string representing the file ID
-        :param fields: list of fields that are returned in the current dataset
+        :param query:
+          - fields: A list of fields that are returned.
 
         :return: file as dict
         """
