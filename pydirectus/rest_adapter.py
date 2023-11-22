@@ -1,6 +1,6 @@
 import logging
-from json import JSONDecodeError
-from typing import Any, Optional, Union
+from json import JSONDecodeError, dumps
+from typing import Any, Optional
 
 import requests
 
@@ -45,6 +45,13 @@ class RestAdapter:
         if not ssl_verify:
             requests.packages.urllib3.disable_warnings()
 
+    def _serialize_params(self, params: Optional[dict]) -> Optional[str]:
+        """
+        Serialize params with json.dumps to enable nested params
+
+        """
+        return dumps(params) if params else None
+
     def _do(
         self,
         http_method: str,
@@ -66,6 +73,7 @@ class RestAdapter:
             "Accept-Encoding": "gzip, deflate, br",
             "Content-Type": "application/json;charset=UTF-8",
         }
+        serialized_params = self._serialize_params(params)
 
         try:
             log_line = f"method={http_method}, url={request_url}, params={params}"
@@ -74,7 +82,7 @@ class RestAdapter:
                 method=http_method,
                 url=request_url,
                 verify=self._ssl_verify,
-                params=params,
+                params=serialized_params,
                 headers=headers,
                 auth=self._auth,
                 json=data,
