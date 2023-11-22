@@ -5,7 +5,7 @@ from typing import Optional
 from .auth import DirectusAuth
 from .models import File, Item, Query
 from .rest_adapter import RestAdapter
-from .utils import handle_directus_response, list_to_string
+from .utils import handle_directus_response
 
 
 class DirectusClient:
