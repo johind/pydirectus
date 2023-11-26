@@ -3,9 +3,9 @@ import logging
 from typing import Optional
 
 from .auth import DirectusAuth
-from .models import File, Item
+from .models import File, Item, Query
 from .rest_adapter import RestAdapter
-from .utils import handle_directus_response, list_to_string
+from .utils import handle_directus_response
 
 
 class DirectusClient:
@@ -34,54 +34,42 @@ class DirectusClient:
     def read_items(
         self,
         collection: str,
-        fields: list[str] = None,
-        filter: dict = None,
-        search: str = None,
-        sort: list[str] = None,
-        limit: int = -1,
-        offset: int = None,
+        query: Query = None,
     ) -> list[Item]:
         """
         GET Items from Collection
         :param collection: a string representing the collection name
-        :param fields: a list of fields that are returned in the current dataset
-        :param filter: search items in a collection that match the filter
-        :param search: perform a search on all string and text type fields within a collection
-        :param sort: what field(s) to sort by. sorting defaults to ascending
-        :param limit: set the maximum number of items that will be returned
-        :param offset: skip the first n items in the response
+        :param query: a dictionary specifying the query parameters for filtering, searching, sorting, etc.
+          - fields: A list of fields that are returned.
+          - filter: Search items in a collection that match the filter.
+          - search: Perform a search on all string and text type fields within a collection.
+          - sort: What field(s) to sort by. Sorting defaults to ascending.
+          - limit: Set the maximum number of items that will be returned.
+          - offset: Skip the first n items in the response.
+          - page: Specify the page number when paginating results.
+          - deep: Set any of the other query parameters on a nested relational dataset.
+          - alias: Rename fields and request the same nested data set multiple times using different filters
 
-        :return: list of dict
+        :return: List[Item] - A list of items retrieved from the collection.
         """
-        params = {
-            "fields": list_to_string(fields),
-            "filter": json.dumps(filter) if filter else {},
-            "search": search,
-            "sort": list_to_string(sort),
-            "limit": limit,
-            "offset": offset,
-        }
-
         endpoint = f"/items/{collection}"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
-    def read_item(
-        self, collection: str, item_id: str, fields: list[str] = None
-    ) -> Item:
+    def read_item(self, collection: str, item_id: str, query: Query = None) -> Item:
         """
         GET Item from Collection by ID
         :param collection: a string representing the collection name
         :param item_id: a string representing the item ID
-        :param fields: list of fields that are returned in the current dataset
+        :param query:
+          - fields: A list of fields that are returned.
 
         :return: item as dict
         """
-        params = {"fields": fields}
 
         endpoint = f"/items/{collection}/{item_id}"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
@@ -126,50 +114,39 @@ class DirectusClient:
 
     def read_files(
         self,
-        fields: list[str] = None,
-        filter: dict = None,
-        search: str = None,
-        sort: list[str] = None,
-        limit: int = -1,
-        offset: int = None,
+        query: Query = None,
     ) -> list[File]:
         """
         GET Files
-        :param fields: a list of fields that are returned in the current dataset
-        :param filter: search files in a collection that match the filter
-        :param search: perform a search on all string and text type fields within files
-        :param sort: what field(s) to sort by. sorting defaults to ascending
-        :param limit: set the maximum number of files that will be returned
-        :param offset: skip the first n files in the response
+        :param query: a dictionary specifying the query parameters for filtering, searching, sorting, etc.
+          - fields: A list of fields that are returned.
+          - filter: Search items in a collection that match the filter.
+          - search: Perform a search on all string and text type fields within a collection.
+          - sort: What field(s) to sort by. Sorting defaults to ascending.
+          - limit: Set the maximum number of items that will be returned.
+          - offset: Skip the first n items in the response.
+          - page: Specify the page number when paginating results.
+          - deep: Set any of the other query parameters on a nested relational dataset.
+          - alias: Rename fields and request the same nested data set multiple times using different filters
 
         :return: list of dict
         """
-        params = {
-            "fields": list_to_string(fields),
-            "filter": json.dumps(filter),
-            "search": search,
-            "sort": list_to_string(sort),
-            "limit": limit,
-            "offset": offset,
-        }
-
         endpoint = "/files"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
-    def read_file(self, file_id: str, fields: list[str] = None) -> File:
+    def read_file(self, file_id: str, query: Query = None) -> File:
         """
         GET File by ID
         :param file_id: a string representing the file ID
-        :param fields: list of fields that are returned in the current dataset
+        :param query:
+          - fields: A list of fields that are returned.
 
         :return: file as dict
         """
-        params = {"fields": fields}
-
         endpoint = f"/files/{file_id}"
-        response = self._rest_adapter.get(endpoint, params=params)
+        response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 

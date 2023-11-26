@@ -6,6 +6,18 @@ from typing import TypedDict
 # Disclaimer: The following explanations are from the official Directus Documentation
 
 
+class Query(TypedDict):
+    fields: list[str] | None
+    filter: dict[str, dict] | None
+    search: str | None
+    sort: list[str] | None
+    limit: int | None
+    offset: int | None
+    page: int | None
+    deep: dict | None
+    alias: dict | None
+
+
 class Item(TypedDict):
     # Primary key of the item
     id: str

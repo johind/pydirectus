@@ -4,3 +4,4 @@ build
 .DS_STORE
 demo.py
 tests.py
+test_tests.py
