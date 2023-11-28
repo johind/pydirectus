@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import Optional
 
@@ -18,7 +17,7 @@ class DirectusClient:
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        self.auth_handler = DirectusAuth(
+        self._auth_handler = DirectusAuth(
             hostname=hostname,
             static_token=static_token,
             username=username,
@@ -26,7 +25,7 @@ class DirectusClient:
         )
         self._rest_adapter = RestAdapter(
             hostname=hostname,
-            auth_handler=self.auth_handler,
+            auth_handler=self._auth_handler,
             ssl_verify=ssl_verify,
             logger=logger,
         )
@@ -34,7 +33,7 @@ class DirectusClient:
     def read_items(
         self,
         collection: str,
-        query: Query = None,
+        query: Optional[Query] = None,
     ) -> list[Item]:
         """
         GET Items from Collection
@@ -50,25 +49,27 @@ class DirectusClient:
           - deep: Set any of the other query parameters on a nested relational dataset.
           - alias: Rename fields and request the same nested data set multiple times using different filters
 
-        :return: List[Item] - A list of items retrieved from the collection.
+        :return: list[Item] - A list of items retrieved from the collection.
         """
         endpoint = f"/items/{collection}"
         response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
 
-    def read_item(self, collection: str, item_id: str, query: Query = None) -> Item:
+    def read_item(
+        self, collection: str, id: str, query: Optional[Query] = None
+    ) -> Item:
         """
         GET Item from Collection by ID
         :param collection: a string representing the collection name
-        :param item_id: a string representing the item ID
+        :param id: a string representing the item ID
         :param query:
           - fields: A list of fields that are returned.
 
         :return: item as dict
         """
 
-        endpoint = f"/items/{collection}/{item_id}"
+        endpoint = f"/items/{collection}/{id}"
         response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
@@ -87,34 +88,34 @@ class DirectusClient:
 
         return handle_directus_response(response)
 
-    def update_item(self, collection: str, item_id: str, data: dict) -> Item:
+    def update_item(self, collection: str, id: str, data: dict) -> Item:
         """
         PATCH Item in Collection
         :param collection: a string representing the collection name
-        :param item_id: a string representing the item ID
+        :param id: a string representing the item ID
         :param data: item data as dict
 
         :return: updated item as dict, if successful
         """
-        endpoint = f"/items/{collection}/{item_id}"
+        endpoint = f"/items/{collection}/{id}"
         response = self._rest_adapter.patch(endpoint, data=data)
 
         return handle_directus_response(response)
 
-    def delete_item(self, collection: str, item_id: str) -> None:
+    def delete_item(self, collection: str, id: str) -> None:
         """
         DELETE Item in Collection
         :param collection: a string representing the collection name
-        :param item_id: a string representing the item ID
+        :param id: a string representing the item ID
 
         :return: None
         """
-        endpoint = f"/items/{collection}/{item_id}"
-        response = self._rest_adapter.delete(endpoint)
+        endpoint = f"/items/{collection}/{id}"
+        self._rest_adapter.delete(endpoint)
 
     def read_files(
         self,
-        query: Query = None,
+        query: Optional[Query] = None,
     ) -> list[File]:
         """
         GET Files
@@ -136,16 +137,16 @@ class DirectusClient:
 
         return handle_directus_response(response)
 
-    def read_file(self, file_id: str, query: Query = None) -> File:
+    def read_file(self, id: str, query: Optional[Query] = None) -> File:
         """
         GET File by ID
-        :param file_id: a string representing the file ID
+        :param id: a string representing the file ID
         :param query:
           - fields: A list of fields that are returned.
 
         :return: file as dict
         """
-        endpoint = f"/files/{file_id}"
+        endpoint = f"/files/{id}"
         response = self._rest_adapter.get(endpoint, params=query)
 
         return handle_directus_response(response)
@@ -162,25 +163,25 @@ class DirectusClient:
 
         return handle_directus_response(response)
 
-    def update_file(self, file_id: str, data: dict) -> File:
+    def update_file(self, id: str, data: dict) -> File:
         """
         PATCH File
-        :param file_id: a string representing the file ID
+        :param id: a string representing the file ID
         :param data: file data as dict
 
         :return: updated file as dict, if successful
         """
-        endpoint = f"/files/{file_id}"
+        endpoint = f"/files/{id}"
         response = self._rest_adapter.patch(endpoint, data=data)
 
         return handle_directus_response(response)
 
-    def delete_file(self, file_id: str) -> None:
+    def delete_file(self, id: str) -> None:
         """
         DELETE File
-        :param file_id: a string representing the file ID
+        :param id: a string representing the file ID
 
         :return: None
         """
-        endpoint = f"/files/{file_id}"
-        response = self._rest_adapter.delete(endpoint)
+        endpoint = f"/files/{id}"
+        self._rest_adapter.delete(endpoint)
