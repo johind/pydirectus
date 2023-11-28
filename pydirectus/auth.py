@@ -30,8 +30,8 @@ class DirectusAuth(requests.auth.AuthBase):
         self.refresh_token = None
         # how long before the access token will expire (in ms).
         self.token_expires = 0
-        # timestamp of last token request (in ms).
-        self.token_timestamp = 0
+        # timestamp of when the access token will expire (in ms).
+        self.token_expiration_date = 0
 
     def _get_access_token(self, auth_type: str) -> None:
         auth_request_url = f"{self.hostname}/auth/{auth_type}"
@@ -52,6 +52,8 @@ class DirectusAuth(requests.auth.AuthBase):
         self.refresh_token = response_data["data"]["refresh_token"]
         self.token_expires = response_data["data"]["expires"]
 
+        self.token_expiration_date = current_time_in_ms() + self.token_expires
+
     def _ensure_access_token(self) -> str:
         if self.static_token:
             return self.static_token
@@ -62,11 +64,10 @@ class DirectusAuth(requests.auth.AuthBase):
             # if there is no access token yet
             not self.access_token
             # if the current access token has already expired
-            or current_time >= self.token_timestamp + self.token_expires
+            or current_time >= self.token_expiration_date
         ):
             auth_type = "login" if not self.access_token else "refresh"
             self._get_access_token(auth_type)
-            self.token_timestamp = current_time
 
         return self.access_token
 
