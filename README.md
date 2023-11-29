@@ -1,73 +1,106 @@
-# Directus API Wrapper
+# PyDirectus: Python API Wrapper for Directus
+
+PyDirectus is a simple and lightweight Python REST API wrapper for [Directus](https://github.com/directus/directus). It provides methods and typed dicts to work with items and files and is easily extensible. It also handles authentication and re-authentication.
+
+The low-level rest adapter is based on [this blog post series](https://www.pretzellogix.net/2021/12/08/how-to-write-a-python3-sdk-library-module-for-a-json-rest-api/) from [@PretzelLogix](https://github.com/PretzelLogix)!
+
+Please note, that PyDirectus is still under development and some parts might improve or change in the future!
 
 ## Installation
 
 ```bash
-
-pip install git+http://192.168.204.170:8010/kigvi/pydirectus.git
-
+pip install pydirectus
 ```
 
-## Setup
+## Getting Started
 
-### Login with static token
+To get started with PyDirectus, create an instance of the `DirectusClient` class by providing your Directus instance's hostname. You can also include optional parameters for authentication, SSL verification, and logging.
 
 ```python
 from pydirectus import DirectusClient
 
+directus = DirectusClient(hostname="http://0.0.0.0:8055")
+```
+
+### Authentication
+
+Authentication is handled automatically, and you have a couple of options:
+
+- **Static Token:** Provide a static token for straightforward authentication.
+- **Username and Password:** Use your Directus username and password for more secure authentication.
+
+```python
 directus = DirectusClient(
-    hostname="http://0.0.0.0:8055", 
-    api_key="your-static-api-token", 
+    hostname="http://0.0.0.0:8055",
+    static_token="your_static_token",
+    # OR
+    username="your_username",
+    password="your_password",
 )
 ```
 
-### Login with user credentials
+Note: If you use both types of authentication, a static token will take precedence.
+
+### Making Requests
+
+Now that you have your PyDirectus client set up, making requests is easy. Let's fetch items from a collection:
 
 ```python
-from pydirectus import DirectusClient
-
-directus = DirectusClient(
-    hostname="http://0.0.0.0:8055", 
-    username="your@email.com",
-    password="password"
-)
+items = directus.read_items(collection="your_collection")
 ```
 
-Note:
+You can perform various operations like reading, creating, updating, and deleting items and files using the provided methods in the `DirectusClient`.
 
-1. Login with LDAP is not supported yet!
-2. If you are using both auth types, a static token will have priority!
+### Examples
 
-## Usage Examples
+#### Reading Items
 
 ```python
-# return all items in shots with nested fields, limited to 10
-response = directus.read_items(
-    collection="articles", 
-    fields=["*.*"], 
-    limit=10
+# Retrieve the latest 10 items
+items = directus.read_items(collection="your_collection", query={"limit": 10})
+
+# Fetch items that match specific criteria
+filtered_items = directus.read_items(
+    collection="your_collection",
+    query={"filter": {"field2": {"_eq": "some word"}}},
 )
 ```
+
+#### Creating an Item
 
 ```python
-# return item with specified id, only start_frame
-response = directus.read_item(
-    collection="articles", 
-    item_id="0002b205-68b4-4737-b0e5-5a7da4ddc2d1", 
-    fields=["title"]
-)
+new_item_data = {"field1": "value1", "field2": "value2"}
+created_item = directus.create_item(collection="your_collection", data=new_item_data)
 ```
+
+#### Updating an Item
 
 ```python
-# create a new item in the "articles" collection
-# directus will return a clone of the created object
-data = {
-    "title": "This is an example article",
-    "author": "example"
-}
-
-response = directus.create_item(
-    collection="articles", 
-    data=data
+updated_item_data = {"field1": "new_value1"}
+updated_item = directus.update_item(
+    collection="your_collection", id="item_id", data=updated_item_data
 )
 ```
+
+#### Deleting an Item
+
+```python
+directus.delete_item(collection="your_collection", id="item_id")
+```
+
+### File Operations
+
+You can also perform operations on files:
+
+```python
+# Retrieve the latest 5 files
+files = directus.read_files(query={"limit": 5})
+```
+
+Please note that it is currently not possible to upload a file.
+You can only add an existing file that is stored in the storage directory.
+This feature will be added in the near future!
+
+Explore the provided methods in the [DirectusClient](https://github.com/johind/pydirectus/blob/main/pydirectus/directus.py#L33) to interact with your Directus instance effortlessly!
+
+Feel free to report issues on [GitHub](https://github.com/johind/pydirectus).
