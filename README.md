@@ -2,7 +2,7 @@
 
 PyDirectus is a simple and lightweight Python REST API wrapper for [Directus](https://github.com/directus/directus). It provides methods and typed dicts to work with items and files and is easily extensible. It also handles authentication and re-authentication.
 
-The low-level rest adapter is based on [this blog post series](https://www.pretzellogix.net/2021/12/08/how-to-write-a-python3-sdk-library-module-for-a-json-rest-api/) from [@PretzelLogix](https://github.com/PretzelLogix)!
+The low-level rest adapter is based on [this series of blog posts](https://www.pretzellogix.net/2021/12/08/how-to-write-a-python3-sdk-library-module-for-a-json-rest-api/) by [@PretzelLogix](https://github.com/PretzelLogix)!
 
 Please note, that PyDirectus is still under development and some parts might improve or change in the future!
 
