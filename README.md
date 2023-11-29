@@ -9,7 +9,7 @@ Please note, that PyDirectus is still under development and some parts might imp
 ## Installation
 
 ```bash
-pip install pydirectus
+pip install git+https://github.com/johind/pydirectus
 ```
 
 ## Getting Started
