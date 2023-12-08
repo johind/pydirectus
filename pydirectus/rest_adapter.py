@@ -45,12 +45,16 @@ class RestAdapter:
         if not ssl_verify:
             requests.packages.urllib3.disable_warnings()
 
-    def _serialize_params(self, params: Optional[dict]) -> Optional[str]:
+    def _serialize_nested_params(self, params: dict) -> dict:
         """
-        Serialize params with json.dumps to enable nested params
+        Serialize nested params for correct query
 
         """
-        return dumps(params) if params else None
+        for key, value in params.items():
+            if isinstance(value, dict):
+                params[key] = dumps(value)
+
+        return params
 
     def _do(
         self,
@@ -73,7 +77,7 @@ class RestAdapter:
             "Accept-Encoding": "gzip, deflate, br",
             "Content-Type": "application/json;charset=UTF-8",
         }
-        serialized_params = self._serialize_params(params)
+        serialized_params = self._serialize_nested_params(params) if params else None
 
         try:
             log_line = f"method={http_method}, url={request_url}, params={params}"
