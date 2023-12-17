@@ -50,9 +50,6 @@ class RestAdapter:
 
         self._logger = logger or logging.getLogger(__name__)
 
-        """ if not ssl_verify:
-            requests.packages.urllib3.disable_warnings() """
-
     def _serialize_nested_params(self, params: dict) -> dict:
         """
         Serialize nested params for correct query
@@ -94,7 +91,7 @@ class RestAdapter:
                 json=data,
             )
         except httpx.RequestError as e:
-            self._logger.error(msg=(str(e)))
+            self._logger.exception(msg=(str(e)))
             raise DirectusException(str(e)) from e
 
         # on delete return data is empty. handle this case here
