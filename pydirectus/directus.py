@@ -17,7 +17,7 @@ class DirectusClient:
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        self._auth_handler = DirectusAuth(
+        _auth_handler = DirectusAuth(
             hostname=hostname,
             static_token=static_token,
             username=username,
@@ -25,7 +25,7 @@ class DirectusClient:
         )
         self._rest_adapter = RestAdapter(
             hostname=hostname,
-            auth_handler=self._auth_handler,
+            auth_handler=_auth_handler,
             ssl_verify=ssl_verify,
             logger=logger,
         )

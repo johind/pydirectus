@@ -1,8 +1,8 @@
 import logging
 from json import JSONDecodeError, dumps
-from typing import Any, Optional
+from typing import Optional
 
-import requests
+import httpx
 
 from .exceptions import DirectusException
 
@@ -32,18 +32,23 @@ class RestAdapter:
     def __init__(
         self,
         hostname: str,
-        auth_handler: Any = None,
+        auth_handler: Optional[httpx.Auth] = None,
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self._url = hostname
-        self._auth = auth_handler
 
-        self._ssl_verify = ssl_verify
+        self._client = httpx.Client(
+            auth=auth_handler,
+            verify=ssl_verify,
+            headers={
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Content-Type": "application/json;charset=UTF-8",
+            },
+        )
+
         self._logger = logger or logging.getLogger(__name__)
-
-        if not ssl_verify:
-            requests.packages.urllib3.disable_warnings()
 
     def _serialize_nested_params(self, params: dict) -> dict:
         """
@@ -72,27 +77,21 @@ class RestAdapter:
         :return: Result object
         """
         request_url = f"{self._url}{endpoint}"
-        headers = {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Content-Type": "application/json;charset=UTF-8",
-        }
+
         serialized_params = self._serialize_nested_params(params) if params else None
 
         try:
             log_line = f"method={http_method}, url={request_url}, params={params}"
             self._logger.debug(msg=log_line)
-            response = requests.request(
+
+            response = self._client.request(
                 method=http_method,
                 url=request_url,
-                verify=self._ssl_verify,
                 params=serialized_params,
-                headers=headers,
-                auth=self._auth,
                 json=data,
             )
-        except requests.exceptions.RequestException as e:
-            self._logger.error(msg=(str(e)))
+        except httpx.RequestError as e:
+            self._logger.exception(msg=(str(e)))
             raise DirectusException(str(e)) from e
 
         # on delete return data is empty. handle this case here
@@ -110,14 +109,13 @@ class RestAdapter:
 
                 return Result(False, response.status_code, message=str(e))
 
-        is_success = 299 >= response.status_code >= 200
-        log_line = f"success={is_success}, status_code={response.status_code}, message={response.reason}"
+        log_line = f"success={response.is_success}, status_code={response.status_code}, message={response.reason_phrase}"
         self._logger.debug(msg=log_line)
 
         return Result(
-            is_success,
-            response.status_code,
-            message=response.reason,
+            success=response.is_success,
+            status_code=response.status_code,
+            message=response.reason_phrase,
             data=data_out,
         )
 

@@ -1,12 +1,13 @@
 from typing import Optional
 
-import requests
+import httpx
+from httpx import Auth, Request
 
 from .exceptions import DirectusAuthException
 from .utils import current_time_in_ms
 
 
-class DirectusAuth(requests.auth.AuthBase):
+class DirectusAuth(Auth):
     def __init__(
         self,
         hostname: str,
@@ -42,7 +43,7 @@ class DirectusAuth(requests.auth.AuthBase):
             case "refresh":
                 data = {"refresh_token": self.refresh_token}
 
-        response = requests.post(auth_request_url, json=data)
+        response = httpx.post(auth_request_url, json=data)
         response_data = response.json()
 
         if "errors" in response_data:
@@ -71,8 +72,7 @@ class DirectusAuth(requests.auth.AuthBase):
 
         return self.access_token
 
-    def __call__(self, r: requests.Request):
+    def auth_flow(self, r: Request) -> Request:
         bearer_token = self._ensure_access_token()
         r.headers["Authorization"] = f"Bearer {bearer_token}"
-
-        return r
+        yield r
