@@ -18,7 +18,7 @@ class File(TypedDict):
     # Preferred filename when file is downloaded.
     filename_download: str
     # Title for the file.
-    title: str
+    title: str | None
     # Mimetype of the file.
     type: str
     # What (virtual) folder the file is in. Many-to-one to folders.
