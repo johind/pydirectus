@@ -4,7 +4,7 @@ PyDirectus is a simple and lightweight Python REST API wrapper for [Directus](ht
 
 The low-level rest adapter is based on [this series of blog posts](https://www.pretzellogix.net/2021/12/08/how-to-write-a-python3-sdk-library-module-for-a-json-rest-api/) by [@PretzelLogix](https://github.com/PretzelLogix)!
 
-Please note, that PyDirectus is still under development and some parts might improve or change in the future!
+Please note that PyDirectus is still under active development and some parts might change in the future!
 
 ## Installation
 
@@ -24,10 +24,10 @@ directus = DirectusClient(hostname="http://0.0.0.0:8055")
 
 ### Authentication
 
-Authentication is handled automatically, and you have a couple of options:
+The authentication process is done automatically, and you have a couple of options to choose from:
 
-- **Static Token:** Provide a static token for straightforward authentication.
-- **Username and Password:** Use your Directus username and password for more secure authentication.
+- **Static Token:** Provide a static token for simple authentication that bypasses the logic of the authentication process.
+- **Username and Password:** Use your Directus username and password for a more secure authentication.
 
 ```python
 directus = DirectusClient(
@@ -39,38 +39,48 @@ directus = DirectusClient(
 )
 ```
 
-Note: If you use both types of authentication, a static token will take precedence.
+> [!NOTE]
+> If you use both types of authentication, a static token takes precedence.
 
-### Making Requests
+### Making a request
 
 Now that you have your PyDirectus client set up, making requests is easy. Let's fetch items from a collection:
 
 ```python
-items = directus.read_items(collection="your_collection")
+items = directus.read_items("articles")
 ```
 
 You can perform various operations like reading, creating, updating, and deleting items and files using the provided methods in the `DirectusClient`.
+
+> [!TIP]
+> The available query parameters align with the global parameters [outlined in the Directus documentation](https://docs.directus.io/reference/query.html).
 
 ### Examples
 
 #### Reading Items
 
 ```python
-# Retrieve the latest 10 items
-items = directus.read_items(collection="your_collection", query={"limit": 10})
+# Retrieve the latest 10 items from the articles collection
+items = directus.read_items("articles", query={"limit": 10})
 
-# Fetch items that match specific criteria
+# Fetch items that match specific filter criteria
 filtered_items = directus.read_items(
-    collection="your_collection",
-    query={"filter": {"field2": {"_eq": "some word"}}},
+    collection="articles",
+    query={"filter": {"author": {"_eq": "Beff Jezos"}}},
 )
+```
+
+#### Reading an Item by ID
+
+```python
+item = directus.read_item(collection="articles", id="53356")
 ```
 
 #### Creating an Item
 
 ```python
 new_item_data = {"field1": "value1", "field2": "value2"}
-created_item = directus.create_item(collection="your_collection", data=new_item_data)
+created_item = directus.create_item("your_collection", data=new_item_data)
 ```
 
 #### Updating an Item
@@ -88,19 +98,34 @@ updated_item = directus.update_item(
 directus.delete_item(collection="your_collection", id="item_id")
 ```
 
-### File Operations
+### Working with files
 
-You can also perform operations on files:
+The method scheme introduced earlier also applies to other tables, such as the files
 
 ```python
 # Retrieve the latest 5 files
 files = directus.read_files(query={"limit": 5})
 ```
 
-Please note that it is currently not possible to upload a file.
-You can only add an existing file that is stored in the storage directory.
-This feature will be added in the near future!
+Currently, only existing files stored in the directory can be added. Uploading a file is not possible yet. This feature will be added soon!
 
-Explore the provided methods in the [DirectusClient](https://github.com/johind/pydirectus/blob/main/pydirectus/directus.py#L33) to interact with your Directus instance effortlessly!
+```python
+file_data: File = {
+    "storage": "local",
+    "filename_disk": "demo/big-buck-bunny.mp4",
+    "filename_download": "big-buck-bunny.mp4",
+    "title": "Big Buck Bunny Demo",
+    "type": "video/mp4",
+    "filesize": 24252243, # in bytes
+    "width": 1920,
+    "height": 1080,
+    "duration": 596047, # in milliseconds
+    "metadata": {"frame_rate": 25.0}, # optional example
+}
+
+created_file = directus.create_file(file_data)
+```
+
+To learn more about the client, refer to the methods provided in the [DirectusClient](https://github.com/johind/pydirectus/blob/main/pydirectus/directus.py#L33)!
 
 Feel free to report issues on [GitHub](https://github.com/johind/pydirectus).
