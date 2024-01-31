@@ -3,3 +3,4 @@
 build
 .DS_STORE
 demo.py
+pydirectus/client.py

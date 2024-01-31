@@ -17,12 +17,16 @@ class DirectusClient:
         ssl_verify: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        _auth_handler = DirectusAuth(
-            hostname=hostname,
-            static_token=static_token,
-            username=username,
-            password=password,
-        )
+        if (username and password) or static_token:
+            _auth_handler = DirectusAuth(
+                hostname=hostname,
+                static_token=static_token,
+                username=username,
+                password=password,
+            )
+        else:
+            _auth_handler = None
+
         self._rest_adapter = RestAdapter(
             hostname=hostname,
             auth_handler=_auth_handler,

@@ -1,10 +1,13 @@
 import logging
 from json import JSONDecodeError, dumps
-from typing import Optional
+from typing import Literal, Optional
 
 import httpx
 
 from .exceptions import DirectusException
+
+
+RequestMethod = Literal["GET", "POST", "DELETE", "PUT", "HEAD"]
 
 
 class Result:
@@ -63,7 +66,7 @@ class RestAdapter:
 
     def _do(
         self,
-        http_method: str,
+        http_method: RequestMethod,
         endpoint: str,
         params: Optional[dict] = None,
         data: Optional[dict] = None,

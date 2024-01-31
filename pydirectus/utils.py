@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Optional
 
@@ -23,6 +24,11 @@ def current_time_in_ms():
 
 def handle_directus_response(result: Result):
     if not result.success:
-        raise DirectusException(result.data["errors"])
+        errors = result.data.get("errors")
+        if errors:
+            raise DirectusException(errors)
+        else:
+            logging.error("Unknown error occurred in Directus response")
+            raise DirectusException("Unknown error occurred in Directus response")
 
-    return result.data["data"]
+    return result.data.get("data")
